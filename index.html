@@ -3,35 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North Star: Meditation Mode</title>
+    <title>Strategic Command: Deep Edit</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root { --accent: #00d4ff; --danger: #ff4b4b; --bg: #050507; }
-        body { margin: 0; background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        body { margin: 0; background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .screen { display: none; padding: 40px; animation: fadeIn 0.4s ease-out; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 80vh; }
-        .active { display: flex; flex-direction: column; align-items: center; }
+        /* Optimized for longer text */
+        .screen { display: none; padding: 30px; animation: fadeIn 0.4s ease-out; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 85vh; text-align: left; }
+        .active { display: flex; flex-direction: column; align-items: flex-start; }
         
-        .label { color: var(--accent); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 5px; margin-bottom: 20px; opacity: 0.6; }
-        .goal-display { font-size: 1.8rem; font-weight: 800; line-height: 1.3; max-width: 700px; margin-bottom: 30px; white-space: pre-wrap; }
+        .label { color: var(--accent); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 4px; margin-bottom: 15px; opacity: 0.6; width: 100%; text-align: center; }
         
-        /* Navigation Buttons */
-        .nav-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 12px 30px; font-size: 0.9rem; border-radius: 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
-        .nav-btn:active { background: var(--accent); color: black; }
+        /* SMALLER FONT SIZE FOR LONGER TEXT */
+        .goal-display { font-size: 1.15rem; font-weight: 400; line-height: 1.6; max-width: 650px; margin-bottom: 30px; color: #e0e0e0; white-space: pre-wrap; width: 100%; }
         
-        .btn-main { background: var(--accent); color: black; border: none; padding: 18px 40px; font-size: 1rem; font-weight: 800; border-radius: 12px; margin: 10px; text-transform: uppercase; width: 80%; max-width: 300px; }
+        .nav-container { width: 100%; display: flex; justify-content: center; gap: 10px; margin-top: auto; padding-bottom: 20px; }
+        .nav-btn { background: transparent; border: 1px solid #333; color: #888; padding: 10px 20px; font-size: 0.8rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
+        .nav-btn:active { border-color: var(--accent); color: var(--accent); }
         
-        /* Shield and Settings */
-        #shield-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; }
-        .warning-box { border: 2px solid var(--danger); padding: 30px; border-radius: 20px; box-shadow: 0 0 30px rgba(255,75,75,0.2); }
+        .btn-main { background: var(--accent); color: black; border: none; padding: 15px 30px; font-size: 0.9rem; font-weight: 700; border-radius: 8px; text-transform: uppercase; cursor: pointer; }
         
-        #menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; overflow-y: auto; padding: 30px; box-sizing: border-box; }
-        input, textarea { width: 100%; background: #1a1a1c; border: 1px solid #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 1rem; box-sizing: border-box; }
+        #menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; overflow-y: auto; padding: 25px; box-sizing: border-box; }
         
-        .settings-icon { position: fixed; bottom: 20px; right: 20px; font-size: 20px; opacity: 0.2; z-index: 101; }
-        .progress-indicator { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* BOX FOR MULTI-LINE INPUT */
+        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem; font-family: inherit; resize: vertical; min-height: 80px; }
+        
+        #shield-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; text-align: center; }
+        .settings-icon { position: fixed; bottom: 15px; right: 15px; font-size: 18px; opacity: 0.15; z-index: 101; }
+        .progress-indicator { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); transition: 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -40,19 +42,20 @@
     <div id="progress-bar" class="progress-indicator" style="width: 0%;"></div>
 
     <div id="shield-overlay">
-        <div class="warning-box">
-            <h2 style="color:var(--danger)">THREAT DETECTED</h2>
-            <p id="shield-message" style="line-height:1.6"></p>
-            <button class="btn-main" style="background:white" onclick="closeShield()">I AM STRONGER. BACK TO MISSION.</button>
-        </div>
+        <h2 style="color:var(--danger); font-size: 1rem; letter-spacing: 3px;">SYSTEM ALERT</h2>
+        <p id="shield-message" style="line-height:1.6; font-size: 1.1rem; color: #ccc; margin: 20px 0;"></p>
+        <button class="btn-main" style="background:white" onclick="closeShield()">RESUME MISSION</button>
     </div>
 
     <div id="menu">
-        <h2 style="color:var(--accent)">COMMAND CONFIG</h2>
+        <h3 style="color:var(--accent); font-size: 0.9rem; letter-spacing: 2px;">STRATEGIC CONFIGURATION</h3>
         <div id="editor-fields"></div>
-        <textarea id="input-temptation" placeholder="Temptation Warning..."></textarea>
-        <button class="btn-main" onclick="saveAndRestart()">SAVE & SYNC</button>
-        <button class="nav-btn" onclick="toggleMenu()">CLOSE</button>
+        <label style="color:var(--danger); font-size:0.65rem;">TEMPTATION SHIELD</label>
+        <textarea id="input-temptation" class="config-box"></textarea>
+        <div style="display:flex; gap: 10px;">
+            <button class="btn-main" style="flex:2" onclick="saveAndRestart()">SAVE & SYNC</button>
+            <button class="nav-btn" style="flex:1" onclick="toggleMenu()">EXIT</button>
+        </div>
     </div>
 
     <div id="display-container"></div>
@@ -60,16 +63,16 @@
     <script>
         const configs = [
             { id: 'life', label: 'Life Legacy' },
-            { id: '10yr', label: 'The 10-Year Gate' },
-            { id: '3yr', label: 'The 3-Year Quest' },
-            { id: '1yr', label: 'The 1-Year Campaign' },
+            { id: '10yr', label: '10-Year Gate (Age 67)' },
+            { id: '3yr', label: '3-Year Quest' },
+            { id: '1yr', label: '1-Year Campaign' },
             { id: 'month', label: 'Monthly Focus' },
             { id: 'week', label: 'Weekly Mission' }
         ];
 
-        let goals = JSON.parse(localStorage.getItem('meditationGoals')) || {
-            life: 'Tap Gear to edit...', '10yr': '...', '3yr': '...', '1yr': '...', 'month': '...', 'week': '...',
-            temptation: 'This choice sabotages your future self.'
+        let goals = JSON.parse(localStorage.getItem('deepGoals')) || {
+            life: 'Entry 1...', '10yr': 'Entry 2...', '3yr': 'Entry 3...', '1yr': 'Entry 4...', 'month': 'Entry 5...', 'week': 'Entry 6...',
+            temptation: 'The risk is too high. Return to your path.'
         };
 
         let currentIdx = 0;
@@ -86,14 +89,18 @@
                 div.innerHTML = `
                     <div class="label">${c.label}</div>
                     <div class="goal-display">${goals[c.id]}</div>
-                    ${index < configs.length - 1 
-                        ? `<button class="nav-btn" onclick="nextScreen()">Next Horizon →</button>` 
-                        : `<button class="btn-main" onclick="openToDo()">Initiate Tactics</button>
-                           <button class="btn-main" style="background:#ff4b4b; color:white" onclick="activateShield()">🛡️ RESIST TEMPTATION</button>`
-                    }
+                    <div class="nav-container">
+                        ${index > 0 ? `<button class="nav-btn" onclick="prevScreen()">← Back</button>` : ''}
+                        ${index < configs.length - 1 
+                            ? `<button class="btn-main" onclick="nextScreen()">Continue →</button>` 
+                            : `<button class="btn-main" onclick="openToDo()">Tactics</button>
+                               <button class="nav-btn" style="color:var(--danger)" onclick="activateShield()">Shield</button>`
+                        }
+                    </div>
                 `;
                 container.appendChild(div);
-                editor.innerHTML += `<label style="color:var(--accent); font-size:0.7rem;">${c.label}</label><input type="text" id="input-${c.id}" value="${goals[c.id]}">`;
+                editor.innerHTML += `<label style="color:var(--accent); font-size:0.6rem; letter-spacing:2px;">${c.label}</label>
+                                     <textarea id="input-${c.id}" class="config-box">${goals[c.id]}</textarea>`;
             });
             document.getElementById('input-temptation').value = goals.temptation;
             updateProgress();
@@ -102,6 +109,13 @@
         function nextScreen() {
             document.getElementById(`screen-${currentIdx}`).classList.remove('active');
             currentIdx++;
+            document.getElementById(`screen-${currentIdx}`).classList.add('active');
+            updateProgress();
+        }
+
+        function prevScreen() {
+            document.getElementById(`screen-${currentIdx}`).classList.remove('active');
+            currentIdx--;
             document.getElementById(`screen-${currentIdx}`).classList.add('active');
             updateProgress();
         }
@@ -119,7 +133,7 @@
         function saveAndRestart() {
             configs.forEach(c => { goals[c.id] = document.getElementById(`input-${c.id}`).value; });
             goals.temptation = document.getElementById('input-temptation').value;
-            localStorage.setItem('meditationGoals', JSON.stringify(goals));
+            localStorage.setItem('deepGoals', JSON.stringify(goals));
             currentIdx = 0;
             toggleMenu(); initApp();
         }
