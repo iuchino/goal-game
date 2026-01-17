@@ -24,9 +24,6 @@
         }
         .nav-counter { font-size: 11px; font-weight: 900; color: #94a3b8; margin-top: 2px; }
         .tab-active .nav-counter { color: #2563eb; }
-        
-        /* Header animation for clarity */
-        #view-title { transition: color 0.2s ease; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -56,23 +53,23 @@
                     <select id="new-type" class="bg-gray-50 p-2 rounded-lg text-xs font-bold border-none"><option value="Book">📚 本</option><option value="Movie">🎬 映画</option><option value="Drama">📺 ドラマ</option></select>
                     <select id="new-goal" class="bg-gray-50 p-2 rounded-lg text-xs font-bold border-none"><option value="technical">💻 Technical</option><option value="finance">💰 Finance</option><option value="religion">🙏 Strategy/Rel</option><option value="howto">🛠 How-To</option><option value="entertainment">🎭 Entertainment</option></select>
                 </div>
-                <button onclick="addNewItem()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md active:bg-blue-700 transition">リストに追加</button>
+                <button onclick="addNewItem()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md">リストに追加</button>
             </div>
         </div>
         <div id="list-container" class="space-y-4"></div>
     </main>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-24 shadow-lg z-20 pb-8">
-        <button onclick="changeTab('to-read')" class="nav-btn flex flex-col items-center flex-1" id="btn-to-read">
-            <span class="text-xl">📅</span><span class="tab-label text-[10px] font-black uppercase">予定リスト</span>
+        <button onclick="changeTab('to-read', '予定リスト')" class="nav-btn flex flex-col items-center flex-1" id="btn-to-read">
+            <span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">予定リスト</span>
             <span class="nav-counter" id="count-to-read">0</span>
         </button>
-        <button onclick="changeTab('progress')" class="nav-btn flex flex-col items-center flex-1" id="btn-progress">
-            <span class="text-xl">📖</span><span class="tab-label text-[10px] font-black uppercase">進行中</span>
+        <button onclick="changeTab('progress', '進行中')" class="nav-btn flex flex-col items-center flex-1" id="btn-progress">
+            <span class="text-xl">📖</span><span class="text-[10px] font-black uppercase">進行中</span>
             <span class="nav-counter" id="count-progress">0</span>
         </button>
-        <button onclick="changeTab('complete')" class="nav-btn flex flex-col items-center flex-1" id="btn-complete">
-            <span class="text-xl">✅</span><span class="tab-label text-[10px] font-black uppercase">完了</span>
+        <button onclick="changeTab('complete', '完了')" class="nav-btn flex flex-col items-center flex-1" id="btn-complete">
+            <span class="text-xl">✅</span><span class="text-[10px] font-black uppercase">完了</span>
             <span class="nav-counter" id="count-complete">0</span>
         </button>
     </nav>
@@ -169,26 +166,19 @@
         function updateRating(id, v) { myContent.find(x=>x.id===id).rating = parseInt(v); updateUI(); }
         function deleteItem(id) { if(confirm("削除しますか？")) { myContent = myContent.filter(x=>x.id !== id); updateUI(); } }
         
-        // --- IMPROVED FORCE-SYNC CHANGE TAB ---
-        function changeTab(tabId) { 
-            currentTab = tabId; 
+        // --- BULLETPROOF CHANGE TAB ---
+        function changeTab(status, label) { 
+            currentTab = status; 
             
-            // 1. Get the text directly from the button that was clicked
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            const labelText = activeBtn.querySelector('.tab-label').innerText;
+            // Explicitly set the text provided in the function call
+            document.getElementById('view-title').innerText = label; 
             
-            // 2. Force the header to match that text exactly
-            const header = document.getElementById('view-title');
-            header.innerText = labelText;
+            // Handle form visibility
+            document.getElementById('add-form').style.display = (status === 'to-read') ? 'block' : 'none'; 
             
-            // 3. Visual "Flash" to confirm change
-            header.style.color = '#ef4444'; // Briefly turn red
-            setTimeout(() => { header.style.color = '#2563eb'; }, 200);
-
-            // 4. Update UI visibility
-            document.getElementById('add-form').style.display = (tabId==='to-read')?'block':'none'; 
-            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('tab-active')); 
-            activeBtn.classList.add('tab-active'); 
+            // Handle active button state
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('tab-active')); 
+            document.getElementById(`btn-${status}`).classList.add('tab-active'); 
             
             updateUI(); 
         }
@@ -197,7 +187,8 @@
         function downloadBackup() { const blob = new Blob([JSON.stringify(myContent, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `kanban_backup.json`; a.click(); }
 
         loadData();
-        changeTab('to-read');
+        // Force initial state
+        changeTab('to-read', '予定リスト');
     </script>
 </body>
 </html>
