@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North Star: Sanctuary Fail-Safe</title>
+    <title>North Star: Manual Entry</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root { --accent: #00d4ff; --gold: #ffd700; --danger: #ff4b4b; --bg: #050507; }
         body { margin: 0; background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* FAIL-SAFE RESET SCREEN */
-        #reset-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s; cursor: pointer; }
-        .breath-circle { width: 100px; height: 100px; border: 2px solid var(--accent); border-radius: 50%; animation: pulse 4s ease-in-out infinite; }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.3; } }
-        #enter-btn { margin-top: 30px; padding: 10px 20px; border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; font-size: 0.7rem; letter-spacing: 2px; display: none; text-transform: uppercase; }
+        /* TOUCH-TO-START SCREEN */
+        #reset-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .breath-circle { width: 120px; height: 120px; border: 3px solid var(--accent); border-radius: 50%; animation: pulse 4s ease-in-out infinite; }
+        @keyframes pulse { 0% { transform: scale(0.85); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.85); opacity: 0.4; } }
+        .instruction { margin-top: 40px; font-size: 0.7rem; letter-spacing: 4px; opacity: 0.6; text-transform: uppercase; }
 
         .screen { display: none; padding: 25px; animation: fadeIn 0.6s ease-out; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 90vh; text-align: left; }
         .active { display: flex; flex-direction: column; align-items: flex-start; }
@@ -34,7 +34,7 @@
 
         #emergency-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
         #menu { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; overflow-y: auto; padding: 25px; box-sizing: border-box; }
-        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; font-family: inherit; }
+        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; }
         textarea.config-box { min-height: 65px; resize: vertical; }
         .settings-icon { position: fixed; bottom: 15px; right: 15px; font-size: 18px; opacity: 0.15; z-index: 101; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -42,16 +42,16 @@
 </head>
 <body>
 
-    <div id="reset-screen" onclick="closeReset()">
+    <div id="reset-screen" onclick="enterSanctuary()">
         <div class="breath-circle"></div>
-        <div id="enter-btn">Enter Sanctuary</div>
+        <div class="instruction">Breathe... then tap circle</div>
     </div>
 
     <div id="emergency-overlay">
         <div style="border: 2px solid var(--danger); padding: 25px; border-radius: 15px;">
             <h2 style="color:var(--danger); letter-spacing: 5px;">THREAT</h2>
             <p id="shield-text" style="line-height:1.6; color:#eee; margin:20px 0;"></p>
-            <button class="btn-main" style="background:white" onclick="closeEmergency()">RESUME</button>
+            <button class="btn-main" style="background:white" onclick="closeEmergency()">RESUME MISSION</button>
         </div>
     </div>
 
@@ -81,5 +81,74 @@
             { id: 'week', label: 'Weekly Mission' }
         ];
 
-        let goals = JSON.parse(localStorage.getItem('sanctuaryFinalV1')) || {
-            life: 'Your Vision...', life_img: '',
+        let goals = JSON.parse(localStorage.getItem('sanctuaryFinalV2')) || {
+            life: 'Your Vision...', life_img: '', '10yr': '...', '10yr_img': '', '3yr': '...', '3yr_img': '', 
+            '1yr': '...', '1yr_img': '', 'month': '...', 'month_img': '', 'week': '...', 'week_img': '',
+            shield: 'This choice sabotages your future self. Return to the mission.'
+        };
+
+        let currentIdx = 0;
+
+        function enterSanctuary() {
+            const rs = document.getElementById('reset-screen');
+            rs.style.opacity = '0';
+            setTimeout(() => { rs.style.display = 'none'; }, 800);
+            initApp();
+        }
+
+        function initApp() {
+            const container = document.getElementById('display-container');
+            const editor = document.getElementById('editor-fields');
+            container.innerHTML = ''; editor.innerHTML = '';
+
+            configs.forEach((c, index) => {
+                const isLast = index === configs.length - 1;
+                const div = document.createElement('div');
+                div.id = `screen-${index}`;
+                div.className = `screen ${index === 0 ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="label ${isLast ? 'gold-label' : ''}">${c.label}</div>
+                    <img class="vision-img" src="${goals[c.id + '_img']}" alt="">
+                    <div class="goal-display">${goals[c.id]}</div>
+                    <div class="nav-container">
+                        <div class="row-nav">
+                            ${index > 0 ? `<button class="nav-btn" onclick="prevScreen()">←</button>` : ''}
+                            ${!isLast 
+                                ? `<button class="btn-main" onclick="nextScreen()">Next Horizon →</button>` 
+                                : `<button class="btn-main btn-gold" onclick="showPreMortem()">Check Alignment</button>`
+                            }
+                        </div>
+                        ${isLast ? `<button class="btn-emergency" onclick="triggerEmergency()">🛡️ EMERGENCY SHIELD</button>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+                editor.innerHTML += `
+                    <label style="color:var(--accent); font-size:0.5rem;">${c.label}</label>
+                    <textarea id="input-${c.id}" class="config-box">${goals[c.id]}</textarea>
+                    <input type="text" id="img-${c.id}" class="config-box" value="${goals[c.id + '_img']}" placeholder="Image URL">
+                `;
+            });
+
+            const pm = document.createElement('div');
+            pm.id = `screen-pm`;
+            pm.className = 'screen';
+            pm.innerHTML = `
+                <div class="label" style="color:var(--danger)">Alignment Check</div>
+                <div class="goal-display">If I fail this week's mission, which part of my 10-year legacy am I willing to sacrifice?</div>
+                <div class="nav-container">
+                    <button class="btn-main" style="background:white" onclick="openGoogleTasks()">Deploy Tactics</button>
+                    <button class="nav-btn" onclick="prevToWeek()">← Rethink</button>
+                </div>
+            `;
+            container.appendChild(pm);
+            document.getElementById('input-shield').value = goals.shield;
+        }
+
+        function triggerEmergency() {
+            document.getElementById('shield-text').innerText = goals.shield;
+            document.getElementById('emergency-overlay').style.display = 'flex';
+        }
+        function closeEmergency() { document.getElementById('emergency-overlay').style.display = 'none'; }
+        function nextScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx++; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        function prevScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx--; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        function showPreMortem() { document.getElementById
