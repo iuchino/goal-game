@@ -3,30 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North Star: Manual Entry</title>
+    <title>North Star: Rock Solid</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root { --accent: #00d4ff; --gold: #ffd700; --danger: #ff4b4b; --bg: #050507; }
         body { margin: 0; background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* TOUCH-TO-START SCREEN */
-        #reset-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .breath-circle { width: 120px; height: 120px; border: 3px solid var(--accent); border-radius: 50%; animation: pulse 4s ease-in-out infinite; }
-        @keyframes pulse { 0% { transform: scale(0.85); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.85); opacity: 0.4; } }
-        .instruction { margin-top: 40px; font-size: 0.7rem; letter-spacing: 4px; opacity: 0.6; text-transform: uppercase; }
-
-        .screen { display: none; padding: 25px; animation: fadeIn 0.6s ease-out; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 90vh; text-align: left; }
+        .screen { display: none; padding: 25px; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 90vh; text-align: left; animation: fadeIn 0.4s ease-out; }
         .active { display: flex; flex-direction: column; align-items: flex-start; }
         
         .label { color: var(--accent); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 12px; opacity: 0.6; width: 100%; text-align: center; }
         .gold-label { color: var(--gold); }
+        
         .vision-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; display: none; }
         .vision-img[src^="http"] { display: block; }
+        
         .goal-display { font-size: 1rem; font-weight: 400; line-height: 1.6; max-width: 650px; margin-bottom: 25px; color: #d1d1d1; white-space: pre-wrap; width: 100%; }
         
         .nav-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding-bottom: 20px; }
         .row-nav { display: flex; gap: 8px; justify-content: center; width: 100%; }
+        
         .nav-btn { background: transparent; border: 1px solid #333; color: #777; padding: 10px 20px; font-size: 0.75rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
         .btn-main { background: var(--accent); color: black; border: none; padding: 14px 25px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; text-transform: uppercase; cursor: pointer; width: 100%; max-width: 280px; }
         .btn-gold { background: var(--gold); }
@@ -34,18 +31,15 @@
 
         #emergency-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
         #menu { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; overflow-y: auto; padding: 25px; box-sizing: border-box; }
-        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; }
-        textarea.config-box { min-height: 65px; resize: vertical; }
-        .settings-icon { position: fixed; bottom: 15px; right: 15px; font-size: 18px; opacity: 0.15; z-index: 101; }
+        
+        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; font-family: inherit; }
+        textarea.config-box { min-height: 70px; resize: vertical; }
+        
+        .settings-icon { position: fixed; bottom: 15px; right: 15px; font-size: 18px; opacity: 0.2; z-index: 101; padding: 10px; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-
-    <div id="reset-screen" onclick="enterSanctuary()">
-        <div class="breath-circle"></div>
-        <div class="instruction">Breathe... then tap circle</div>
-    </div>
 
     <div id="emergency-overlay">
         <div style="border: 2px solid var(--danger); padding: 25px; border-radius: 15px;">
@@ -66,7 +60,6 @@
             <button class="btn-main" onclick="saveAndRestart()">SAVE & REBOOT</button>
             <button class="nav-btn" onclick="toggleMenu()">EXIT</button>
         </div>
-        <button class="nav-btn" style="width:100%; margin-top:15px; border-color:#444" onclick="exportToText()">📥 Export Backup</button>
     </div>
 
     <div id="display-container"></div>
@@ -81,20 +74,13 @@
             { id: 'week', label: 'Weekly Mission' }
         ];
 
-        let goals = JSON.parse(localStorage.getItem('sanctuaryFinalV2')) || {
+        let goals = JSON.parse(localStorage.getItem('sanctuaryFinalV3')) || {
             life: 'Your Vision...', life_img: '', '10yr': '...', '10yr_img': '', '3yr': '...', '3yr_img': '', 
             '1yr': '...', '1yr_img': '', 'month': '...', 'month_img': '', 'week': '...', 'week_img': '',
             shield: 'This choice sabotages your future self. Return to the mission.'
         };
 
         let currentIdx = 0;
-
-        function enterSanctuary() {
-            const rs = document.getElementById('reset-screen');
-            rs.style.opacity = '0';
-            setTimeout(() => { rs.style.display = 'none'; }, 800);
-            initApp();
-        }
 
         function initApp() {
             const container = document.getElementById('display-container');
@@ -114,7 +100,7 @@
                         <div class="row-nav">
                             ${index > 0 ? `<button class="nav-btn" onclick="prevScreen()">←</button>` : ''}
                             ${!isLast 
-                                ? `<button class="btn-main" onclick="nextScreen()">Next Horizon →</button>` 
+                                ? `<button class="btn-main" onclick="nextScreen()">Continue →</button>` 
                                 : `<button class="btn-main btn-gold" onclick="showPreMortem()">Check Alignment</button>`
                             }
                         </div>
@@ -151,4 +137,24 @@
         function closeEmergency() { document.getElementById('emergency-overlay').style.display = 'none'; }
         function nextScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx++; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
         function prevScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx--; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
-        function showPreMortem() { document.getElementById
+        function showPreMortem() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); document.getElementById('screen-pm').classList.add('active'); }
+        function prevToWeek() { document.getElementById('screen-pm').classList.remove('active'); document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        function toggleMenu() { const m = document.getElementById('menu'); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        
+        function saveAndRestart() {
+            configs.forEach(c => { 
+                goals[c.id] = document.getElementById(`input-${c.id}`).value; 
+                goals[c.id + '_img'] = document.getElementById(`img-${c.id}`).value;
+            });
+            goals.shield = document.getElementById('input-shield').value;
+            localStorage.setItem('sanctuaryFinalV3', JSON.stringify(goals));
+            location.reload();
+        }
+
+        function openGoogleTasks() { window.location.href = "https://tasks.google.com/"; }
+        
+        // Start immediately
+        initApp();
+    </script>
+</body>
+</html>
