@@ -37,7 +37,7 @@
             </div>
             <div class="flex gap-2">
                  <button onclick="downloadBackup()" class="bg-blue-50 text-blue-600 p-2.5 rounded-full">📥</button>
-                 <button onclick="saveToGitHub()" class="bg-green-600 text-white p-2.5 rounded-full shadow-lg active:scale-95">💾</button>
+                 <button onclick="saveToGitHub()" class="bg-green-600 text-white p-2.5 rounded-full shadow-lg">💾</button>
                  <button onclick="setupToken()" class="bg-gray-100 p-2.5 rounded-full">🔑</button>
             </div>
         </div>
@@ -130,7 +130,7 @@
             .forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'swipe-container';
-                cardWrapperHtml = `
+                card.innerHTML = `
                     <div class="delete-action" onclick="deleteItem(${item.id})">削除</div>
                     <div class="swipe-content bg-white p-5 border border-gray-100 cat-${item.goal || 'entertainment'}" ontouchstart="tS(event)" ontouchmove="tM(event, this)">
                         <div class="flex justify-between items-center mb-1">
@@ -145,7 +145,6 @@
                             `<select onchange="updateRating(${item.id}, this.value)" class="w-full bg-yellow-50 text-yellow-700 font-bold py-3 px-4 rounded-xl text-sm border-none"><option value="0">Rating</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${item.rating==n?'selected':''}>⭐ ${n}</option>`).join('')}</select>`}
                         </div>
                     </div>`;
-                card.innerHTML = cardWrapperHtml;
                 container.appendChild(card);
             });
         }
@@ -169,8 +168,10 @@
         
         function changeTab(t) { 
             currentTab = t; 
-            // CORRECTED HEADER MAPPING
-            document.getElementById('view-title').innerText = {'to-read':'予定リスト','progress':'進行中','complete':'完了'}[t]; 
+            // FIXED HEADER MAPPING: Uses exact strings for the titles
+            const titles = { 'to-read': '予定リスト', 'progress': '進行中', 'complete': '完了' };
+            document.getElementById('view-title').innerText = titles[t]; 
+            
             document.getElementById('add-form').style.display = (t==='to-read')?'block':'none'; 
             document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('tab-active')); 
             document.getElementById(`btn-${t}`).classList.add('tab-active'); 
