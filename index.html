@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North Star: Rock Solid</title>
+    <title>North Star: Inversion Edition</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
@@ -15,8 +15,9 @@
         
         .label { color: var(--accent); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 12px; opacity: 0.6; width: 100%; text-align: center; }
         .gold-label { color: var(--gold); }
+        .danger-label { color: var(--danger); }
         
-        .vision-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; display: none; }
+        .vision-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; display: none; }
         .vision-img[src^="http"] { display: block; }
         
         .goal-display { font-size: 1rem; font-weight: 400; line-height: 1.6; max-width: 650px; margin-bottom: 25px; color: #d1d1d1; white-space: pre-wrap; width: 100%; }
@@ -54,7 +55,9 @@
     <div id="menu">
         <h3 style="color:var(--accent); font-size: 0.8rem; letter-spacing: 2px;">COMMAND SETTINGS</h3>
         <div id="editor-fields"></div>
-        <label style="color:var(--danger); font-size:0.55rem;">EMERGENCY SHIELD</label>
+        <label style="color:var(--danger); font-size:0.55rem;">NOT-TO-DO LIST (INVERSION)</label>
+        <textarea id="input-nottodo" class="config-box"></textarea>
+        <label style="color:var(--danger); font-size:0.55rem;">EMERGENCY SHIELD TEXT</label>
         <textarea id="input-shield" class="config-box"></textarea>
         <div style="display:flex; gap: 10px; margin-top: 15px;">
             <button class="btn-main" onclick="saveAndRestart()">SAVE & REBOOT</button>
@@ -74,9 +77,10 @@
             { id: 'week', label: 'Weekly Mission' }
         ];
 
-        let goals = JSON.parse(localStorage.getItem('sanctuaryFinalV3')) || {
+        let goals = JSON.parse(localStorage.getItem('sanctuaryInversionV1')) || {
             life: 'Your Vision...', life_img: '', '10yr': '...', '10yr_img': '', '3yr': '...', '3yr_img': '', 
             '1yr': '...', '1yr_img': '', 'month': '...', 'month_img': '', 'week': '...', 'week_img': '',
+            nottodo: '1. No meetings before 10 AM\n2. No checking email on weekends\n3. No saying yes to low-leverage "opportunities"',
             shield: 'This choice sabotages your future self. Return to the mission.'
         };
 
@@ -99,12 +103,8 @@
                     <div class="nav-container">
                         <div class="row-nav">
                             ${index > 0 ? `<button class="nav-btn" onclick="prevScreen()">←</button>` : ''}
-                            ${!isLast 
-                                ? `<button class="btn-main" onclick="nextScreen()">Continue →</button>` 
-                                : `<button class="btn-main btn-gold" onclick="showPreMortem()">Check Alignment</button>`
-                            }
+                            <button class="btn-main ${isLast ? 'btn-gold' : ''}" onclick="nextScreen()">Next Horizon →</button>
                         </div>
-                        ${isLast ? `<button class="btn-emergency" onclick="triggerEmergency()">🛡️ EMERGENCY SHIELD</button>` : ''}
                     </div>
                 `;
                 container.appendChild(div);
@@ -115,18 +115,36 @@
                 `;
             });
 
+            // NOT TO DO SCREEN
+            const ntd = document.createElement('div');
+            ntd.id = `screen-ntd`;
+            ntd.className = 'screen';
+            ntd.innerHTML = `
+                <div class="label danger-label">Not-To-Do List (The Boundary)</div>
+                <div class="goal-display" style="color:#ffbaba;">${goals.nottodo}</div>
+                <div class="nav-container">
+                    <button class="btn-main" onclick="showPreMortem()">Proceed to Alignment →</button>
+                    <button class="nav-btn" onclick="prevFromNTD()">← Back</button>
+                </div>
+            `;
+            container.appendChild(ntd);
+
+            // PRE MORTEM SCREEN
             const pm = document.createElement('div');
             pm.id = `screen-pm`;
             pm.className = 'screen';
             pm.innerHTML = `
-                <div class="label" style="color:var(--danger)">Alignment Check</div>
+                <div class="label" style="color:var(--danger)">Final Alignment</div>
                 <div class="goal-display">If I fail this week's mission, which part of my 10-year legacy am I willing to sacrifice?</div>
                 <div class="nav-container">
                     <button class="btn-main" style="background:white" onclick="openGoogleTasks()">Deploy Tactics</button>
-                    <button class="nav-btn" onclick="prevToWeek()">← Rethink</button>
+                    <button class="btn-emergency" onclick="triggerEmergency()">🛡️ EMERGENCY SHIELD</button>
+                    <button class="nav-btn" onclick="prevToNTD()">← Review Boundaries</button>
                 </div>
             `;
             container.appendChild(pm);
+            
+            document.getElementById('input-nottodo').value = goals.nottodo;
             document.getElementById('input-shield').value = goals.shield;
         }
 
@@ -135,10 +153,22 @@
             document.getElementById('emergency-overlay').style.display = 'flex';
         }
         function closeEmergency() { document.getElementById('emergency-overlay').style.display = 'none'; }
-        function nextScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx++; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        
+        function nextScreen() {
+            if (currentIdx < configs.length - 1) {
+                document.getElementById(`screen-${currentIdx}`).classList.remove('active');
+                currentIdx++;
+                document.getElementById(`screen-${currentIdx}`).classList.add('active');
+            } else {
+                document.getElementById(`screen-${currentIdx}`).classList.remove('active');
+                document.getElementById('screen-ntd').classList.add('active');
+            }
+        }
+
         function prevScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx--; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
-        function showPreMortem() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); document.getElementById('screen-pm').classList.add('active'); }
-        function prevToWeek() { document.getElementById('screen-pm').classList.remove('active'); document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        function prevFromNTD() { document.getElementById('screen-ntd').classList.remove('active'); document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
+        function showPreMortem() { document.getElementById('screen-ntd').classList.remove('active'); document.getElementById('screen-pm').classList.add('active'); }
+        function prevToNTD() { document.getElementById('screen-pm').classList.remove('active'); document.getElementById('screen-ntd').classList.add('active'); }
         function toggleMenu() { const m = document.getElementById('menu'); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
         
         function saveAndRestart() {
@@ -146,14 +176,13 @@
                 goals[c.id] = document.getElementById(`input-${c.id}`).value; 
                 goals[c.id + '_img'] = document.getElementById(`img-${c.id}`).value;
             });
+            goals.nottodo = document.getElementById('input-nottodo').value;
             goals.shield = document.getElementById('input-shield').value;
-            localStorage.setItem('sanctuaryFinalV3', JSON.stringify(goals));
+            localStorage.setItem('sanctuaryInversionV1', JSON.stringify(goals));
             location.reload();
         }
 
         function openGoogleTasks() { window.location.href = "https://tasks.google.com/"; }
-        
-        // Start immediately
         initApp();
     </script>
 </body>
