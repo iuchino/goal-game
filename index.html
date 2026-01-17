@@ -1,189 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North Star: Inversion Edition</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Strategy Kanban</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: #00d4ff; --gold: #ffd700; --danger: #ff4b4b; --bg: #050507; }
-        body { margin: 0; background: var(--bg); color: white; font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        .screen { display: none; padding: 25px; width: 100%; box-sizing: border-box; overflow-y: auto; max-height: 90vh; text-align: left; animation: fadeIn 0.4s ease-out; }
-        .active { display: flex; flex-direction: column; align-items: flex-start; }
-        
-        .label { color: var(--accent); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 12px; opacity: 0.6; width: 100%; text-align: center; }
-        .gold-label { color: var(--gold); }
-        .danger-label { color: var(--danger); }
-        
-        .vision-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; display: none; }
-        .vision-img[src^="http"] { display: block; }
-        
-        .goal-display { font-size: 1rem; font-weight: 400; line-height: 1.6; max-width: 650px; margin-bottom: 25px; color: #d1d1d1; white-space: pre-wrap; width: 100%; }
-        
-        .nav-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding-bottom: 20px; }
-        .row-nav { display: flex; gap: 8px; justify-content: center; width: 100%; }
-        
-        .nav-btn { background: transparent; border: 1px solid #333; color: #777; padding: 10px 20px; font-size: 0.75rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
-        .btn-main { background: var(--accent); color: black; border: none; padding: 14px 25px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; text-transform: uppercase; cursor: pointer; width: 100%; max-width: 280px; }
-        .btn-gold { background: var(--gold); }
-        .btn-emergency { background: var(--danger); color: white; border: none; padding: 12px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; text-transform: uppercase; width: 100%; max-width: 280px; margin-top: 5px; }
+        body { padding-bottom: 110px; font-family: -apple-system, system-ui, sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .tab-active { color: #2563eb; border-top: 3px solid #2563eb; background-color: #f8fafc; }
+        .cat-technical { border-left: 5px solid #3b82f6; } 
+        .cat-finance { border-left: 5px solid #10b981; }   
+        .cat-religion { border-left: 5px solid #8b5cf6; }  
+        .cat-howto { border-left: 5px solid #f59e0b; }     
+        .cat-entertainment { border-left: 5px solid #ef4444; }
 
-        #emergency-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-        #menu { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; overflow-y: auto; padding: 25px; box-sizing: border-box; }
-        
-        .config-box { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; font-family: inherit; }
-        textarea.config-box { min-height: 70px; resize: vertical; }
-        
-        .settings-icon { position: fixed; bottom: 15px; right: 15px; font-size: 18px; opacity: 0.2; z-index: 101; padding: 10px; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .swipe-container { position: relative; margin-bottom: 1rem; background: #fee2e2; border-radius: 1.25rem; overflow: hidden; }
+        .swipe-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); background: white; z-index: 2; position: relative; }
+        .delete-action { 
+            position: absolute; right: 0; top: 0; height: 70px; width: 80px; 
+            display: flex; align-items: center; justify-content: center;
+            background: #ef4444; color: white; font-weight: 800; font-size: 14px; 
+            z-index: 1; border-radius: 0 1.25rem 0 1.25rem;
+        }
+        .nav-counter { font-size: 11px; font-weight: 900; color: #94a3b8; margin-top: 2px; }
+        .tab-active .nav-counter { color: #2563eb; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-900">
 
-    <div id="emergency-overlay">
-        <div style="border: 2px solid var(--danger); padding: 25px; border-radius: 15px;">
-            <h2 style="color:var(--danger); letter-spacing: 5px;">THREAT</h2>
-            <p id="shield-text" style="line-height:1.6; color:#eee; margin:20px 0;"></p>
-            <button class="btn-main" style="background:white" onclick="closeEmergency()">RESUME MISSION</button>
+    <header class="bg-white p-4 shadow-sm sticky top-0 z-30">
+        <div class="flex justify-between items-center mb-2">
+            <div>
+                <h1 id="view-title" class="text-xl font-bold leading-none text-blue-600">予定リスト</h1>
+                <p id="sync-status" class="text-[9px] text-gray-400 font-bold uppercase mt-1">Ready</p>
+                <p id="last-saved" class="text-[8px] text-blue-400 font-medium">Sync: ---</p>
+            </div>
+            <div class="flex gap-2">
+                 <button onclick="downloadBackup()" class="bg-blue-50 text-blue-600 p-2.5 rounded-full">📥</button>
+                 <button onclick="saveToGitHub()" class="bg-green-600 text-white p-2.5 rounded-full shadow-lg active:scale-95">💾</button>
+                 <button onclick="setupToken()" class="bg-gray-100 p-2.5 rounded-full">🔑</button>
+            </div>
         </div>
-    </div>
+        <input id="search-input" type="text" oninput="renderBoard()" placeholder="検索..." class="w-full bg-gray-100 border-none rounded-xl p-3 text-sm outline-none">
+    </header>
 
-    <div class="settings-icon" onclick="toggleMenu()">⚙️</div>
-
-    <div id="menu">
-        <h3 style="color:var(--accent); font-size: 0.8rem; letter-spacing: 2px;">COMMAND SETTINGS</h3>
-        <div id="editor-fields"></div>
-        <label style="color:var(--danger); font-size:0.55rem;">NOT-TO-DO LIST (INVERSION)</label>
-        <textarea id="input-nottodo" class="config-box"></textarea>
-        <label style="color:var(--danger); font-size:0.55rem;">EMERGENCY SHIELD TEXT</label>
-        <textarea id="input-shield" class="config-box"></textarea>
-        <div style="display:flex; gap: 10px; margin-top: 15px;">
-            <button class="btn-main" onclick="saveAndRestart()">SAVE & REBOOT</button>
-            <button class="nav-btn" onclick="toggleMenu()">EXIT</button>
+    <main class="p-4">
+        <div id="add-form" class="mb-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <input id="new-title" type="text" placeholder="タイトル..." class="w-full border-b border-gray-100 p-2 mb-3 outline-none text-lg font-bold">
+                <input id="new-link" type="url" placeholder="URL (Amazonなど)" class="w-full border-b border-gray-100 p-2 mb-4 outline-none text-xs text-blue-500">
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <select id="new-type" class="bg-gray-50 p-2 rounded-lg text-xs font-bold border-none"><option value="Book">📚 本</option><option value="Movie">🎬 映画</option><option value="Drama">📺 ドラマ</option></select>
+                    <select id="new-goal" class="bg-gray-50 p-2 rounded-lg text-xs font-bold border-none"><option value="technical">💻 Technical</option><option value="finance">💰 Finance</option><option value="religion">🙏 Strategy/Rel</option><option value="howto">🛠 How-To</option><option value="entertainment">🎭 Entertainment</option></select>
+                </div>
+                <button onclick="addNewItem()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md active:bg-blue-700 transition transform active:scale-[0.98]">リストに追加</button>
+            </div>
         </div>
-    </div>
+        <div id="list-container" class="space-y-4"></div>
+    </main>
 
-    <div id="display-container"></div>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-24 shadow-lg z-20 pb-8">
+        <button onclick="changeTab('to-read')" class="nav-btn flex flex-col items-center flex-1" id="btn-to-read">
+            <span class="text-xl">📅</span><span class="text-[10px] font-black uppercase">予定リスト</span>
+            <span class="nav-counter" id="count-to-read">0</span>
+        </button>
+        <button onclick="changeTab('progress')" class="nav-btn flex flex-col items-center flex-1" id="btn-progress">
+            <span class="text-xl">📖</span><span class="text-[10px] font-black uppercase">進行中</span>
+            <span class="nav-counter" id="count-progress">0</span>
+        </button>
+        <button onclick="changeTab('complete')" class="nav-btn flex flex-col items-center flex-1" id="btn-complete">
+            <span class="text-xl">✅</span><span class="text-[10px] font-black uppercase">完了</span>
+            <span class="nav-counter" id="count-complete">0</span>
+        </button>
+    </nav>
 
     <script>
-        const configs = [
-            { id: 'life', label: 'Life Legacy' },
-            { id: '10yr', label: '10-Year Gate' },
-            { id: '3yr', label: '3-Year Quest' },
-            { id: '1yr', label: '1-Year Campaign' },
-            { id: 'month', label: 'Monthly Focus' },
-            { id: 'week', label: 'Weekly Mission' }
-        ];
+        const GITHUB_CONFIG = { token: localStorage.getItem('gh_token') || '', owner: 'iuchino', repo: 'content-kanban', path: 'data.json' };
+        let myContent = [];
+        let currentTab = 'to-read';
+        let touchStartX = 0;
 
-        let goals = JSON.parse(localStorage.getItem('sanctuaryInversionV1')) || {
-            life: 'Your Vision...', life_img: '', '10yr': '...', '10yr_img': '', '3yr': '...', '3yr_img': '', 
-            '1yr': '...', '1yr_img': '', 'month': '...', 'month_img': '', 'week': '...', 'week_img': '',
-            nottodo: '1. No meetings before 10 AM\n2. No checking email on weekends\n3. No saying yes to low-leverage "opportunities"',
-            shield: 'This choice sabotages your future self. Return to the mission.'
-        };
+        function updateUI() {
+            document.getElementById('count-to-read').innerText = myContent.filter(i => i.status === 'to-read').length;
+            document.getElementById('count-progress').innerText = myContent.filter(i => i.status === 'progress').length;
+            document.getElementById('count-complete').innerText = myContent.filter(i => i.status === 'complete').length;
+            renderBoard();
+        }
 
-        let currentIdx = 0;
+        async function loadData() {
+            if(!GITHUB_CONFIG.token) return;
+            const statusEl = document.getElementById('sync-status');
+            statusEl.innerText = "CONNECTING...";
+            try {
+                const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}?cb=${Date.now()}`;
+                const res = await fetch(url, { headers: { 'Authorization': `Bearer ${GITHUB_CONFIG.token.trim()}`, 'Accept': 'application/vnd.github.v3+json' } });
+                if (res.ok) {
+                    const data = await res.json();
+                    myContent = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                    updateUI();
+                    statusEl.innerText = "CLOUD SYNC ACTIVE";
+                    statusEl.className = "text-[9px] text-green-600 font-bold uppercase mt-1";
+                    document.getElementById('last-saved').innerText = `Sync: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                }
+            } catch (e) { statusEl.innerText = "SYNC ERROR"; }
+        }
 
-        function initApp() {
-            const container = document.getElementById('display-container');
-            const editor = document.getElementById('editor-fields');
-            container.innerHTML = ''; editor.innerHTML = '';
+        async function saveToGitHub() {
+            if(!GITHUB_CONFIG.token) { alert("Token required"); return; }
+            document.getElementById('sync-status').innerText = "UPLOADING...";
+            try {
+                const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`;
+                const getRes = await fetch(url + `?cb=${Date.now()}`, { headers: { 'Authorization': `Bearer ${GITHUB_CONFIG.token.trim()}` } });
+                const fileData = await getRes.json();
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(myContent, null, 2))));
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${GITHUB_CONFIG.token.trim()}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: "Sync Update", content, sha: fileData.sha })
+                });
+                if(res.ok) { alert("✅ 保存完了"); loadData(); }
+            } catch (e) { alert("Save Error"); }
+        }
 
-            configs.forEach((c, index) => {
-                const isLast = index === configs.length - 1;
-                const div = document.createElement('div');
-                div.id = `screen-${index}`;
-                div.className = `screen ${index === 0 ? 'active' : ''}`;
-                div.innerHTML = `
-                    <div class="label ${isLast ? 'gold-label' : ''}">${c.label}</div>
-                    <img class="vision-img" src="${goals[c.id + '_img']}" alt="">
-                    <div class="goal-display">${goals[c.id]}</div>
-                    <div class="nav-container">
-                        <div class="row-nav">
-                            ${index > 0 ? `<button class="nav-btn" onclick="prevScreen()">←</button>` : ''}
-                            <button class="btn-main ${isLast ? 'btn-gold' : ''}" onclick="nextScreen()">Next Horizon →</button>
+        function renderBoard() {
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            const search = document.getElementById('search-input').value.toLowerCase();
+            myContent.filter(item => item.status === currentTab && item.title.toLowerCase().includes(search))
+            .forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'swipe-container';
+                cardWrapperHtml = `
+                    <div class="delete-action" onclick="deleteItem(${item.id})">削除</div>
+                    <div class="swipe-content bg-white p-5 border border-gray-100 cat-${item.goal || 'entertainment'}" ontouchstart="tS(event)" ontouchmove="tM(event, this)">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${item.type} | ${item.goal}</span>
                         </div>
-                    </div>
-                `;
-                container.appendChild(div);
-                editor.innerHTML += `
-                    <label style="color:var(--accent); font-size:0.5rem;">${c.label}</label>
-                    <textarea id="input-${c.id}" class="config-box">${goals[c.id]}</textarea>
-                    <input type="text" id="img-${c.id}" class="config-box" value="${goals[c.id + '_img']}" placeholder="Image URL">
-                `;
+                        <h3 class="font-bold text-gray-800 text-lg mb-1 leading-tight pr-10">${item.title}</h3>
+                        ${item.url ? `<a href="${item.url}" target="_blank" class="text-[11px] text-blue-500 underline mb-3 block truncate">🔗 リソースを開く</a>` : ''}
+                        <textarea onchange="updateNote(${item.id}, this.value)" placeholder="メモ..." class="w-full text-sm p-3 bg-gray-50 rounded-xl h-28 mb-4 border-none outline-none focus:ring-1 focus:ring-blue-100">${item.note || ''}</textarea>
+                        <div class="flex gap-2">
+                            ${currentTab==='progress' ? `<button onclick="moveBack(${item.id})" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-sm">← 戻す</button>` : ''}
+                            ${currentTab!=='complete' ? `<button onclick="moveItem(${item.id})" class="flex-[2] bg-blue-600 text-white font-bold py-3 rounded-xl text-sm shadow-md">NEXT →</button>` : 
+                            `<select onchange="updateRating(${item.id}, this.value)" class="w-full bg-yellow-50 text-yellow-700 font-bold py-3 px-4 rounded-xl text-sm border-none"><option value="0">Rating</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${item.rating==n?'selected':''}>⭐ ${n}</option>`).join('')}</select>`}
+                        </div>
+                    </div>`;
+                card.innerHTML = cardWrapperHtml;
+                container.appendChild(card);
             });
-
-            // NOT TO DO SCREEN
-            const ntd = document.createElement('div');
-            ntd.id = `screen-ntd`;
-            ntd.className = 'screen';
-            ntd.innerHTML = `
-                <div class="label danger-label">Not-To-Do List (The Boundary)</div>
-                <div class="goal-display" style="color:#ffbaba;">${goals.nottodo}</div>
-                <div class="nav-container">
-                    <button class="btn-main" onclick="showPreMortem()">Proceed to Alignment →</button>
-                    <button class="nav-btn" onclick="prevFromNTD()">← Back</button>
-                </div>
-            `;
-            container.appendChild(ntd);
-
-            // PRE MORTEM SCREEN
-            const pm = document.createElement('div');
-            pm.id = `screen-pm`;
-            pm.className = 'screen';
-            pm.innerHTML = `
-                <div class="label" style="color:var(--danger)">Final Alignment</div>
-                <div class="goal-display">If I fail this week's mission, which part of my 10-year legacy am I willing to sacrifice?</div>
-                <div class="nav-container">
-                    <button class="btn-main" style="background:white" onclick="openGoogleTasks()">Deploy Tactics</button>
-                    <button class="btn-emergency" onclick="triggerEmergency()">🛡️ EMERGENCY SHIELD</button>
-                    <button class="nav-btn" onclick="prevToNTD()">← Review Boundaries</button>
-                </div>
-            `;
-            container.appendChild(pm);
-            
-            document.getElementById('input-nottodo').value = goals.nottodo;
-            document.getElementById('input-shield').value = goals.shield;
         }
 
-        function triggerEmergency() {
-            document.getElementById('shield-text').innerText = goals.shield;
-            document.getElementById('emergency-overlay').style.display = 'flex';
-        }
-        function closeEmergency() { document.getElementById('emergency-overlay').style.display = 'none'; }
+        function tS(e) { touchStartX = e.touches[0].clientX; }
+        function tM(e, el) { let d = touchStartX - e.touches[0].clientX; if(d > 60) el.style.transform = "translateX(-80px)"; else if(d < -20) el.style.transform = "translateX(0px)"; }
         
-        function nextScreen() {
-            if (currentIdx < configs.length - 1) {
-                document.getElementById(`screen-${currentIdx}`).classList.remove('active');
-                currentIdx++;
-                document.getElementById(`screen-${currentIdx}`).classList.add('active');
-            } else {
-                document.getElementById(`screen-${currentIdx}`).classList.remove('active');
-                document.getElementById('screen-ntd').classList.add('active');
-            }
+        function addNewItem() {
+            const titleInput = document.getElementById('new-title');
+            const linkInput = document.getElementById('new-link');
+            if(!titleInput.value) return;
+            myContent.push({ id: Date.now(), title: titleInput.value, url: linkInput.value, type: document.getElementById('new-type').value, goal: document.getElementById('new-goal').value, status: 'to-read', note: '', rating: 0 });
+            titleInput.value = ''; linkInput.value = ''; updateUI();
         }
 
-        function prevScreen() { document.getElementById(`screen-${currentIdx}`).classList.remove('active'); currentIdx--; document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
-        function prevFromNTD() { document.getElementById('screen-ntd').classList.remove('active'); document.getElementById(`screen-${currentIdx}`).classList.add('active'); }
-        function showPreMortem() { document.getElementById('screen-ntd').classList.remove('active'); document.getElementById('screen-pm').classList.add('active'); }
-        function prevToNTD() { document.getElementById('screen-pm').classList.remove('active'); document.getElementById('screen-ntd').classList.add('active'); }
-        function toggleMenu() { const m = document.getElementById('menu'); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        function moveItem(id) { let i = myContent.find(x=>x.id===id); if(i.status==='to-read'){ if(myContent.filter(x=>x.status==='progress').length>=4){alert("Limit 4!"); return;} i.status='progress'; } else { i.status='complete'; } updateUI(); }
+        function moveBack(id) { myContent.find(x=>x.id===id).status='to-read'; updateUI(); }
+        function updateNote(id, v) { myContent.find(x=>x.id===id).note = v; }
+        function updateRating(id, v) { myContent.find(x=>x.id===id).rating = parseInt(v); updateUI(); }
+        function deleteItem(id) { if(confirm("削除しますか？")) { myContent = myContent.filter(x=>x.id !== id); updateUI(); } }
         
-        function saveAndRestart() {
-            configs.forEach(c => { 
-                goals[c.id] = document.getElementById(`input-${c.id}`).value; 
-                goals[c.id + '_img'] = document.getElementById(`img-${c.id}`).value;
-            });
-            goals.nottodo = document.getElementById('input-nottodo').value;
-            goals.shield = document.getElementById('input-shield').value;
-            localStorage.setItem('sanctuaryInversionV1', JSON.stringify(goals));
-            location.reload();
+        function changeTab(t) { 
+            currentTab = t; 
+            // CORRECTED HEADER MAPPING
+            document.getElementById('view-title').innerText = {'to-read':'予定リスト','progress':'進行中','complete':'完了'}[t]; 
+            document.getElementById('add-form').style.display = (t==='to-read')?'block':'none'; 
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('tab-active')); 
+            document.getElementById(`btn-${t}`).classList.add('tab-active'); 
+            updateUI(); 
         }
 
-        function openGoogleTasks() { window.location.href = "https://tasks.google.com/"; }
-        initApp();
+        function setupToken() { let t = prompt("Token:", GITHUB_CONFIG.token); if(t){ GITHUB_CONFIG.token = t.trim(); localStorage.setItem('gh_token', t.trim()); loadData(); } }
+        function downloadBackup() { const blob = new Blob([JSON.stringify(myContent, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `kanban_backup.json`; a.click(); }
+
+        loadData();
+        changeTab('to-read');
     </script>
 </body>
 </html>
